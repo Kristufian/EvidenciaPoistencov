@@ -1,0 +1,74 @@
+@model EvidenciaPoistencov.Models.Poistenie
+
+@{
+    ViewData["Title"] = "vymazať poistenie";
+}
+
+<h1>vymazať poistenie</h1>
+
+<h3>Ste si istý, že chcete vymazať toto poistenie?</h3>
+<div>
+    <h4>EvidenciaPoistencov.Models.Poistenie</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Nazov)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Nazov)
+        </dd>
+    </dl>
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.PredmetPoistenia)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.PredmetPoistenia)
+        </dd>
+    </dl>
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Suma)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Suma)
+        </dd>
+    </dl>
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.PlatnostOd)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.PlatnostOd)
+        </dd>
+    </dl>
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.PlatnostDo)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.PlatnostDo)
+        </dd>
+    </dl>
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.PoistenecId)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.PoistenecId)
+        </dd>
+    </dl>
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Poistenec)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Poistenec)
+        </dd>
+    </dl>
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <input type="submit" value="Vymazať" class="btn btn-danger" /> |
+        <a asp-action="Index">Späť na zoznam</a>
+    </form>
+</div>

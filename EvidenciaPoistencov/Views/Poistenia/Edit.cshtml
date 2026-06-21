@@ -1,0 +1,64 @@
+@model EvidenciaPoistencov.Models.Poistenie
+
+@{
+    ViewData["Title"] = "Upraviť poistenie";
+}
+
+<h1>Upraviť poistenie</h1>
+
+<h4>Poistenie</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="form-group">
+                <label asp-for="Nazov" class="control-label"></label>
+                <input asp-for="Nazov" class="form-control" />
+                <span asp-validation-for="Nazov" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PredmetPoistenia" class="control-label"></label>
+                <input asp-for="PredmetPoistenia" class="form-control" />
+                <span asp-validation-for="PredmetPoistenia" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Suma" class="control-label"></label>
+                <input asp-for="Suma" class="form-control" />
+                <span asp-validation-for="Suma" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PlatnostOd" class="control-label"></label>
+                <input asp-for="PlatnostOd" class="form-control" />
+                <span asp-validation-for="PlatnostOd" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PlatnostDo" class="control-label"></label>
+                <input asp-for="PlatnostDo" class="form-control" />
+                <span asp-validation-for="PlatnostDo" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PoistenecId" class="control-label"></label>
+                <input asp-for="PoistenecId" class="form-control" />
+                <span asp-validation-for="PoistenecId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Poistenec" class="control-label"></label>
+                <input asp-for="Poistenec" class="form-control" />
+                <span asp-validation-for="Poistenec" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Uložiť" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Späť na zoznam</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

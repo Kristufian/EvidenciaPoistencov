@@ -1,0 +1,77 @@
+@model IEnumerable<EvidenciaPoistencov.Models.Poistenec>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Vytvoriť nového poistenca</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Meno)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Priezvisko)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Email)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Telefon)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Ulica)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Mesto)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PSC)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Poistenia)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => item.Meno)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Priezvisko)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Email)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Telefon)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Ulica)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Mesto)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.PSC)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Poistenia)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Upraviť</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Detaily</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Vymazať</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
