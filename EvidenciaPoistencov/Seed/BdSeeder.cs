@@ -8,43 +8,60 @@ namespace EvidenciaPoistencov.Seed
         public static async Task SeedRolesAndAdminAsync(IServiceProvider serviceProvider)
         {
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
             string[] roles = { "Admin", "Poistenec" };
 
             foreach (var role in roles)
             {
-                bool roleExists = await roleManager.RoleExistsAsync(role);
-
-                if (!roleExists)
+                if (!await roleManager.RoleExistsAsync(role))
                 {
-                    await roleManager.CreateAsync(new IdentityRole(role));
+                    var roleResult = await roleManager.CreateAsync(new IdentityRole(role));
+
+                    if (!roleResult.Succeeded)
+                    {
+                        var errors = string.Join(", ", roleResult.Errors.Select(e => e.Description));
+
+                        throw new InvalidOperationException($"Rolu {role} sa nepodarilo vytvoriť: {errors}");
+                    }
                 }
             }
 
-            string adminEmail = "admin@admin.sk";
-            string adminPassword = "Admin123!";
+            const string adminEmail = "admin@admin.sk";
+            const string adminPassword = "Admin123!";
 
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
             if (adminUser == null)
             {
-                var user = new ApplicationUser
+                adminUser = new ApplicationUser
                 {
                     UserName = adminEmail,
                     Email = adminEmail,
                     EmailConfirmed = true
                 };
 
-                var result = await userManager.CreateAsync(user, adminPassword);
+                var userResult = await userManager.CreateAsync(adminUser, adminPassword);
 
-                if (!result.Succeeded)
+                if (!userResult.Succeeded)
                 {
-                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                    throw new Exception("Admin účet sa nepodarilo vytvoriť: " + errors);
-                }
+                    var errors = string.Join(", ", userResult.Errors.Select(e => e.Description));
 
-                await userManager.AddToRoleAsync(user, "Admin");
+                    throw new InvalidOperationException($"Admin účet sa nepodarilo vytvoriť: {errors}");
+                }
+            }
+
+            if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+            {
+                var roleResult = await userManager.AddToRoleAsync(adminUser, "Admin");
+
+                if (!roleResult.Succeeded)
+                {
+                    var errors = string.Join(", ", roleResult.Errors.Select(e => e.Description));
+
+                    throw new InvalidOperationException($"Admin rolu sa nepodarilo priradiť: {errors}");
+                }
             }
         }
     }

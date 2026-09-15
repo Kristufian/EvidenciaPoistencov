@@ -1,65 +1,69 @@
 @model IEnumerable<EvidenciaPoistencov.Models.Poistenie>
 
 @{
-    ViewData["Title"] = "Index";
+	ViewData["Title"] = "Poistenia";
 }
 
-<h1>Index</h1>
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+	<h1>Poistenia</h1>
 
-<p>
-    <a asp-action="Create">Vytvoriť nové poistenie</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Nazov)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PredmetPoistenia)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Suma)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PlatnostOd)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PlatnostDo)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Poistenec)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.Nazov)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.PredmetPoistenia)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Suma)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.PlatnostOd)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.PlatnostDo)
-            </td>
-            <td>
-                @($"{item.Poistenec?.Meno} {item.Poistenec?.Priezvisko}")
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Upraviť</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Detaily</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Vymazať</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+	<a asp-action="Create" class="btn btn-primary">Vytvoriť nové poistenie</a>
+</div>
+
+<div class="table-responsive">
+	<table class="table table-striped align-middle">
+		<thead>
+			<tr>
+				<th>Názov</th>
+				<th>Predmet poistenia</th>
+				<th>Poistná suma</th>
+				<th>Platnosť od</th>
+				<th>Platnosť do</th>
+				<th>Poistenec</th>
+				<th>Akcie</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			@foreach (var item in Model)
+			{
+				<tr>
+					<td>
+						@item.Nazov
+					</td>
+					<td>
+						@(item.PredmetPoistenia ?? "—")
+					</td>
+					<td>
+						@(item.Suma == decimal.Truncate(item.Suma) ? $"{item.Suma:N0} €" : $"{item.Suma:N2} €")
+					</td>
+					<td>
+						@item.PlatnostOd.ToShortDateString()
+					</td>
+					<td>
+						@(item.PlatnostDo?.ToShortDateString() ?? "—")
+					</td>
+					<td>
+						@if (item.Poistenec != null)
+						{
+							@($"{item.Poistenec.Meno} {item.Poistenec.Priezvisko}")
+						}
+						else
+						{
+							<span>—</span>
+						}
+					</td>
+					<td>
+						<div class="d-flex gap-1 flex-wrap">
+							<a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Detaily</a>
+
+							<a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Upraviť</a>
+
+							<a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Vymazať</a>
+						</div>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+</div>

@@ -1,74 +1,51 @@
 @model EvidenciaPoistencov.Models.Poistenie
 
 @{
-    ViewData["Title"] = "vymazať poistenie";
+    ViewData["Title"] = "Vymazanie poistenia";
 }
 
-<h1>vymazať poistenie</h1>
+<h1>Vymazanie poistenia</h1>
+
+<div class="alert alert-danger" role="alert"><strong>Upozornenie: </strong>Túto akciu nie je možné vrátiť späť</div>
 
 <h3>Ste si istý, že chcete vymazať toto poistenie?</h3>
-<div>
-    <h4>EvidenciaPoistencov.Models.Poistenie</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Nazov)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Nazov)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PredmetPoistenia)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PredmetPoistenia)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Suma)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Suma)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PlatnostOd)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PlatnostOd)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PlatnostDo)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PlatnostDo)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PoistenecId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PoistenecId)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Poistenec)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Poistenec)
-        </dd>
-    </dl>
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Vymazať" class="btn btn-danger" /> |
-        <a asp-action="Index">Späť na zoznam</a>
-    </form>
-</div>
+
+<hr />
+
+<dl class="row">
+    <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Nazov)</dt>
+    <dd class="col-sm-9">@Model.Nazov</dd>
+
+    <dt class="col-sm-3">@Html.DisplayNameFor(model => model.PredmetPoistenia)</dt>
+    <dd class="col-sm-9">@(Model.PredmetPoistenia ?? "—")</dd>
+
+    <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Suma)</dt>
+    <dd class="col-sm-9">@(Model.Suma == decimal.Truncate(Model.Suma) ? $"{Model.Suma:N0} €" : $"{Model.Suma:N2} €")</dd>
+
+    <dt class="col-sm-3">@Html.DisplayNameFor(model => model.PlatnostOd)</dt>
+    <dd class="col-sm-9">@Model.PlatnostOd.ToShortDateString()</dd>
+
+    <dt class="col-sm-3">@Html.DisplayNameFor(model => model.PlatnostDo)</dt>
+    <dd class="col-sm-9">@(Model.PlatnostDo?.ToShortDateString() ?? "—")</dd>
+
+    <dt class="col-sm-3">Poistenec</dt>
+    <dd class="col-sm-9">
+        @if (Model.Poistenec != null)
+        {
+            <span>@Model.Poistenec.Meno @Model.Poistenec.Priezvisko</span>
+        }
+        else
+        {
+            <span>—</span>
+        }
+    </dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="d-flex gap-2 flex-wrap"><button type="submit" class="btn btn-danger">Vymazať</button>
+
+        <a asp-action="Index" class="btn btn-secondary">Späť na zoznam</a>
+    </div>
+</form>

@@ -1,11 +1,11 @@
 
 using EvidenciaPoistencov.Data;
 using EvidenciaPoistencov.Models;
+using EvidenciaPoistencov.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
-using EvidenciaPoistencov.ViewModels;
 
 namespace EvidenciaPoistencov.Controllers
 {
@@ -21,13 +21,11 @@ namespace EvidenciaPoistencov.Controllers
             _userManager = userManager;
         }
 
-        // GET: POISTENECS
         public async Task<IActionResult> Index()
         {
             return View(await _context.Poistenci.ToListAsync());
         }
 
-        // GET: POISTENECS/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -35,7 +33,8 @@ namespace EvidenciaPoistencov.Controllers
                 return NotFound();
             }
 
-            var poistenec = await _context.Poistenci.FirstOrDefaultAsync(m => m.Id == id);
+            var poistenec = await _context.Poistenci.Include(p => p.Poistenia).FirstOrDefaultAsync(p => p.Id == id);
+
             if (poistenec == null)
             {
                 return NotFound();
@@ -44,72 +43,86 @@ namespace EvidenciaPoistencov.Controllers
             return View(poistenec);
         }
 
-        // GET: POISTENECS/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: POISTENECS/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PoistenecCreateViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var existingUser = await _userManager.FindByEmailAsync(model.Email);
-
-                if (existingUser != null)
-                {
-                    ModelState.AddModelError("Email", "Používateľ s týmto emailom už existuje.");
-                    return View(model);
-                }
-
-                var poistenec = new Poistenec
-                {
-                    Meno = model.Meno,
-                    Priezvisko = model.Priezvisko,
-                    Email = model.Email,
-                    Telefon = model.Telefon,
-                    Ulica = model.Ulica,
-                    Mesto = model.Mesto,
-                    PSC = model.PSC
-                };
-
-                _context.Add(poistenec);
-                await _context.SaveChangesAsync();
-
-                var user = new ApplicationUser
-                {
-                    UserName = model.Email,
-                    Email = model.Email,
-                    EmailConfirmed = true,
-                    PoistenecId = poistenec.Id
-                };
-
-                var result = await _userManager.CreateAsync(user, model.Heslo);
-
-                if (result.Succeeded)
-                {
-                    await _userManager.AddToRoleAsync(user, "Poistenec");
-                    return RedirectToAction(nameof(Index));
-                }
-
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError("", error.Description);
-                }
-
-                _context.Poistenci.Remove(poistenec);
-                await _context.SaveChangesAsync();
+                return View(model);
             }
 
-            return View(model);
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+
+            if (existingUser != null)
+            {
+                ModelState.AddModelError(nameof(model.Email), "Používateľ s týmto emailom už existuje.");
+
+                return View(model);
+            }
+
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            var poistenec = new Poistenec
+            {
+                Meno = model.Meno,
+                Priezvisko = model.Priezvisko,
+                Email = model.Email,
+                Telefon = model.Telefon,
+                Ulica = model.Ulica,
+                Mesto = model.Mesto,
+                PSC = model.PSC
+            };
+
+            _context.Poistenci.Add(poistenec);
+            await _context.SaveChangesAsync();
+
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                EmailConfirmed = true,
+                PoistenecId = poistenec.Id
+            };
+
+            var userResult = await _userManager.CreateAsync(user, model.Heslo);
+
+            if (!userResult.Succeeded)
+            {
+                foreach (var error in userResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                await transaction.RollbackAsync();
+
+                return View(model);
+            }
+
+            var roleResult = await _userManager.AddToRoleAsync(user, "Poistenec");
+
+            if (!roleResult.Succeeded)
+            {
+                foreach (var error in roleResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                await transaction.RollbackAsync();
+
+                return View(model);
+            }
+
+            await transaction.CommitAsync();
+
+            return RedirectToAction(nameof(Index));
         }
 
-        // GET: POISTENECS/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -125,42 +138,102 @@ namespace EvidenciaPoistencov.Controllers
             return View(poistenec);
         }
 
-        // POST: POISTENECS/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int? id, [Bind("Id,Meno,Priezvisko,Email,Telefon,Ulica,Mesto,PSC,Poistenia")] Poistenec poistenec)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Meno,Priezvisko,Email,Telefon,Ulica,Mesto,PSC")] Poistenec poistenec)
         {
             if (id != poistenec.Id)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(poistenec);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!PoistenecExists(poistenec.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                return View(poistenec);
             }
-            return View(poistenec);
+
+            var originalPoistenec = await _context.Poistenci.FindAsync(id);
+
+            if (originalPoistenec == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.PoistenecId == id);
+
+            if (user != null)
+            {
+                var existingUserWithEmail = await _userManager.FindByEmailAsync(poistenec.Email);
+
+                if (existingUserWithEmail != null && existingUserWithEmail.Id != user.Id)
+                {
+                    ModelState.AddModelError(nameof(poistenec.Email), "Používateľ s týmto emailom už existuje.");
+
+                    return View(poistenec);
+                }
+            }
+
+            await using var transaction =await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                originalPoistenec.Meno = poistenec.Meno;
+                originalPoistenec.Priezvisko = poistenec.Priezvisko;
+                originalPoistenec.Email = poistenec.Email;
+                originalPoistenec.Telefon = poistenec.Telefon;
+                originalPoistenec.Ulica = poistenec.Ulica;
+                originalPoistenec.Mesto = poistenec.Mesto;
+                originalPoistenec.PSC = poistenec.PSC;
+
+                if (user != null)
+                {
+                    var emailResult = await _userManager.SetEmailAsync(user, poistenec.Email);
+
+                    if (!emailResult.Succeeded)
+                    {
+                        foreach (var error in emailResult.Errors)
+                        {
+                            ModelState.AddModelError(
+                                nameof(poistenec.Email),
+                                error.Description);
+                        }
+
+                        await transaction.RollbackAsync();
+                        return View(poistenec);
+                    }
+
+                    var userNameResult = await _userManager.SetUserNameAsync(user, poistenec.Email);
+
+                    if (!userNameResult.Succeeded)
+                    {
+                        foreach (var error in userNameResult.Errors)
+                        {
+                            ModelState.AddModelError(
+                                nameof(poistenec.Email),
+                                error.Description);
+                        }
+
+                        await transaction.RollbackAsync();
+                        return View(poistenec);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!PoistenecExists(poistenec.Id))
+                {
+                    return NotFound();
+                }
+
+                throw;
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
-        // GET: POISTENECS/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -168,8 +241,7 @@ namespace EvidenciaPoistencov.Controllers
                 return NotFound();
             }
 
-            var poistenec = await _context.Poistenci
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var poistenec = await _context.Poistenci.FirstOrDefaultAsync(m => m.Id == id);
             if (poistenec == null)
             {
                 return NotFound();
@@ -178,18 +250,40 @@ namespace EvidenciaPoistencov.Controllers
             return View(poistenec);
         }
 
-        // POST: POISTENECS/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int? id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var poistenec = await _context.Poistenci.FindAsync(id);
-            if (poistenec != null)
+            var poistenec = await _context.Poistenci.Include(p => p.Poistenia).FirstOrDefaultAsync(p => p.Id == id);
+
+            if (poistenec == null)
             {
-                _context.Poistenci.Remove(poistenec);
+                return NotFound();
             }
 
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.PoistenecId == id);
+
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            if (user != null)
+            {
+                var userDeleteResult = await _userManager.DeleteAsync(user);
+
+                if (!userDeleteResult.Succeeded)
+                {
+                    foreach (var error in userDeleteResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+
+                    return View("Delete", poistenec);
+                }
+            }
+
+            _context.Poistenci.Remove(poistenec);
             await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
             return RedirectToAction(nameof(Index));
         }
 

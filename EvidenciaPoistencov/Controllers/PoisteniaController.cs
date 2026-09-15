@@ -1,9 +1,9 @@
 
+using EvidenciaPoistencov.Data;
+using EvidenciaPoistencov.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using EvidenciaPoistencov.Models;
-using EvidenciaPoistencov.Data;
-using Microsoft.AspNetCore.Authorization;
 
 namespace EvidenciaPoistencov.Controllers
 {
@@ -18,14 +18,12 @@ namespace EvidenciaPoistencov.Controllers
             _context = context;
         }
 
-        // GET: POISTENIES
         public async Task<IActionResult> Index()
         {
-        var poistenia = await _context.Poistenia.Include(p => p.Poistenec).ToListAsync();
+            var poistenia = await _context.Poistenia.Include(p => p.Poistenec).ToListAsync();
             return View(poistenia);
         }
 
-        // GET: POISTENIES/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -33,8 +31,7 @@ namespace EvidenciaPoistencov.Controllers
                 return NotFound();
             }
 
-            var poistenie = await _context.Poistenia
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var poistenie = await _context.Poistenia.Include(p => p.Poistenec).FirstOrDefaultAsync(m => m.Id == id);
             if (poistenie == null)
             {
                 return NotFound();
@@ -43,29 +40,58 @@ namespace EvidenciaPoistencov.Controllers
             return View(poistenie);
         }
 
-        // GET: POISTENIES/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create(int? poistenecId)
         {
-            return View();
+            if (poistenecId.HasValue)
+            {
+                var poistenec = await _context.Poistenci
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Id == poistenecId.Value);
+
+                if (poistenec != null)
+                {
+                    ViewData["SelectedPoistenecText"] =
+                        $"{poistenec.Meno} {poistenec.Priezvisko} — " +
+                        $"{poistenec.Email} — {poistenec.Mesto} — ID {poistenec.Id}";
+                }
+            }
+
+            return View(new Poistenie
+            {
+                PoistenecId = poistenecId ?? 0,
+                PlatnostOd = DateTime.Today
+            });
         }
 
-        // POST: POISTENIES/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nazov,PredmetPoistenia,Suma,PlatnostOd,PlatnostDo,PoistenecId,Poistenec")] Poistenie poistenie)
+        public async Task<IActionResult> Create([Bind("Nazov,PredmetPoistenia,Suma,PlatnostOd,PlatnostDo,PoistenecId")] Poistenie poistenie)
         {
+            if (poistenie.PlatnostOd.Date < DateTime.Today)
+            {
+                ModelState.AddModelError(nameof(poistenie.PlatnostOd), "Dátum začiatku platnosti nemôže byť v minulosti.");
+            }
+            if (poistenie.PlatnostDo.HasValue && poistenie.PlatnostDo.Value.Date < DateTime.Today.AddDays(1))
+            {
+                ModelState.AddModelError(nameof(poistenie.PlatnostDo), "Dátum konca platnosti musí byť najskôr zajtra.");
+            }
             if (ModelState.IsValid)
             {
-                _context.Add(poistenie);
+                _context.Poistenia.Add(poistenie);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
+            var selectedPoistenec = await _context.Poistenci.AsNoTracking().FirstOrDefaultAsync(p => p.Id == poistenie.PoistenecId);
+
+            if (selectedPoistenec != null)
+            {
+                ViewData["SelectedPoistenecText"] = $"{selectedPoistenec.Meno} {selectedPoistenec.Priezvisko} — " + $"{selectedPoistenec.Email} — {selectedPoistenec.Mesto} — ID {selectedPoistenec.Id}";
+            }
+
             return View(poistenie);
         }
 
-        // GET: POISTENIES/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -73,7 +99,8 @@ namespace EvidenciaPoistencov.Controllers
                 return NotFound();
             }
 
-            var poistenie = await _context.Poistenia.FindAsync(id);
+            var poistenie = await _context.Poistenia.Include(p => p.Poistenec).FirstOrDefaultAsync(p => p.Id == id);
+
             if (poistenie == null)
             {
                 return NotFound();
@@ -81,42 +108,70 @@ namespace EvidenciaPoistencov.Controllers
             return View(poistenie);
         }
 
-        // POST: POISTENIES/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int? id, [Bind("Id,Nazov,PredmetPoistenia,Suma,PlatnostOd,PlatnostDo,PoistenecId,Poistenec")] Poistenie poistenie)
+        public async Task<IActionResult> Edit(int id)
         {
-            if (id != poistenie.Id)
+            var originalPoistenie = await _context.Poistenia.Include(p => p.Poistenec).FirstOrDefaultAsync(p => p.Id == id);
+
+            if (originalPoistenie == null)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            var updated = await TryUpdateModelAsync(originalPoistenie, "", p => p.Nazov, p => p.PredmetPoistenia, p => p.Suma, p => p.PlatnostOd, p => p.PlatnostDo);
+
+            if (updated)
             {
                 try
                 {
-                    _context.Update(poistenie);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!PoistenieExists(poistenie.Id))
+                    if (!PoistenieExists(id))
                     {
                         return NotFound();
                     }
-                    else
-                    {
-                        throw;
-                    }
+
+                    throw;
                 }
-                return RedirectToAction(nameof(Index));
             }
-            return View(poistenie);
+
+            return View(originalPoistenie);
         }
 
-        // GET: POISTENIES/Delete/5
+        [HttpGet]
+        public async Task<IActionResult> SearchPoistenci(string term)
+        {
+            if (string.IsNullOrWhiteSpace(term))
+            {
+                return Json(Array.Empty<object>());
+            }
+
+            term = term.Trim();
+
+            var poistenci = await _context.Poistenci.AsNoTracking().Where(p => p.Meno.Contains(term) || p.Priezvisko.Contains(term) ||
+            p.Email.Contains(term)).OrderBy(p => p.Priezvisko).ThenBy(p => p.Meno).Take(10).Select(p => new
+            {
+                p.Id,
+                p.Meno,
+                p.Priezvisko,
+                p.Email,
+                p.Mesto
+            })
+                .ToListAsync();
+
+            var result = poistenci.Select(p => new
+            {
+                id = p.Id,
+                text = $"{p.Meno} {p.Priezvisko} — {p.Email} — {p.Mesto} — ID {p.Id}"
+            });
+
+            return Json(result);
+        }
+
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -124,8 +179,7 @@ namespace EvidenciaPoistencov.Controllers
                 return NotFound();
             }
 
-            var poistenie = await _context.Poistenia
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var poistenie = await _context.Poistenia.Include(p => p.Poistenec).FirstOrDefaultAsync(m => m.Id == id);
             if (poistenie == null)
             {
                 return NotFound();
@@ -134,18 +188,20 @@ namespace EvidenciaPoistencov.Controllers
             return View(poistenie);
         }
 
-        // POST: POISTENIES/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int? id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var poistenie = await _context.Poistenia.FindAsync(id);
-            if (poistenie != null)
+
+            if (poistenie == null)
             {
-                _context.Poistenia.Remove(poistenie);
+                return NotFound();
             }
 
+            _context.Poistenia.Remove(poistenie);
             await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 

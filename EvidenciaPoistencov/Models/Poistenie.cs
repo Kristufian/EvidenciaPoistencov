@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EvidenciaPoistencov.Models
 {
-    public class Poistenie
+    public class Poistenie : IValidatableObject
     {
         public int Id { get; set; }
 
@@ -18,8 +18,7 @@ namespace EvidenciaPoistencov.Models
 
         [Required(ErrorMessage = "Poistná suma je povinná.")]
         [Range(0.01, 999999, ErrorMessage = "Suma musí byť väčšia ako 0.")]
-        [Precision(18,2)]
-        [Display(Name = "Poistná suma")]
+        [Precision(18, 2)][Display(Name = "Poistná suma")]
         public decimal Suma { get; set; }
 
         [Required(ErrorMessage = "Dátum začiatku platnosti je povinný.")]
@@ -30,14 +29,22 @@ namespace EvidenciaPoistencov.Models
         [Required(ErrorMessage = "Dátum konca platnosti je povinný.")]
         [DataType(DataType.Date)]
         [Display(Name = "Platnosť do")]
-        public DateTime PlatnostDo { get; set; }
+        public DateTime? PlatnostDo { get; set; }
 
-        [Display(Name = "Meno poistníka")]
         public Poistenec? Poistenec { get; set; }
 
-        [Display(Name = "ID poistníka")]
+        [Display(Name = "Poistenec")]
+        [Range(1, int.MaxValue, ErrorMessage = "Poistenec je povinný.")]
         public int PoistenecId { get; set; }
 
-        
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (PlatnostDo.HasValue && PlatnostDo.Value < PlatnostOd)
+            {
+                yield return new ValidationResult("Dátum konca platnosti nemôže byť skorší ako dátum začiatku platnosti.", new[] { nameof(PlatnostDo) });
+            }
+        }
+
+
     }
 }

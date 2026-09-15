@@ -17,18 +17,23 @@ namespace EvidenciaPoistencov.Models
         [Required(ErrorMessage = "Email je povinný.")]
         [EmailAddress(ErrorMessage = "Zadaj platný email.")]
         [StringLength(100)]
+        [Display(Name = "E-mail")]
         public string Email { get; set; } = string.Empty;
 
         [StringLength(30)]
+        [Display(Name = "Telefón")]
         public string? Telefon { get; set; }
 
         [StringLength(100)]
+        [Display(Name = "Ulica")]
         public string? Ulica { get; set; }
 
         [StringLength(100)]
+        [Display(Name = "Mesto")]
         public string? Mesto { get; set; }
 
         [StringLength(20)]
+        [Display(Name = "PSČ")]
         public string? PSC { get; set; }
 
         public List<Poistenie> Poistenia { get; set; } = new();

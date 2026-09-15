@@ -14,5 +14,13 @@ namespace EvidenciaPoistencov.Data
         public DbSet<Poistenec> Poistenci { get; set; }
 
         public DbSet<Poistenie> Poistenia { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            builder.Entity<ApplicationUser>().HasOne(u => u.Poistenec).WithOne().HasForeignKey<ApplicationUser>(u => u.PoistenecId).OnDelete(DeleteBehavior.Restrict);
+        }
     }
+
 }

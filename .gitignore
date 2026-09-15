@@ -1,6 +1,22 @@
+# Build
 bin/
 obj/
+# Visual Studio
 .vs/
 *.user
 *.suo
+# Database files
+*.mdf
+*.ldf
+# Logs
+*.log
+# Environment / local configuration
+.env
+.env.*
 appsettings.Development.json
+# Test results / coverage
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+coverage/

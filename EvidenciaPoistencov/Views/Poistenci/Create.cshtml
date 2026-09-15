@@ -1,80 +1,84 @@
 @model EvidenciaPoistencov.ViewModels.PoistenecCreateViewModel
+
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Vytvorenie poistenca";
 }
 
-<h1>Create</h1>
+<h1>Vytvorenie poistenca</h1>
 
-<h4>Poistenec</h4>
 <hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-            <div class="form-group">
-                <label asp-for="Meno" class="control-label"></label>
+<div class="row">
+    <div class="col-md-6 col-lg-5">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3">
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Meno" class="form-label"></label>
                 <input asp-for="Meno" class="form-control" />
                 <span asp-validation-for="Meno" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Priezvisko" class="control-label"></label>
+            <div class="mb-3">
+                <label asp-for="Priezvisko" class="form-label"></label>
                 <input asp-for="Priezvisko" class="form-control" />
                 <span asp-validation-for="Priezvisko" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
                 <input asp-for="Email" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Heslo" class="control-label"></label>
-                <input asp-for="Heslo" class="form-control" />
+            <div class="mb-3">
+                <label asp-for="Heslo" class="form-label"></label>
+
+                <input asp-for="Heslo" class="form-control" autocomplete="new-password" />
+
+                <div class="form-text">
+                    Heslo musí mať minimálne 6 znakov a obsahovať malé písmeno, veľké písmeno, číslo a špeciálny znak.
+                </div>
+
                 <span asp-validation-for="Heslo" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Telefon" class="control-label"></label>
-                <input asp-for="Telefon" class="form-control" />
+            <div class="mb-3">
+                <label asp-for="Telefon" class="form-label"></label>
+                <input asp-for="Telefon" class="form-control" type="tel" />
                 <span asp-validation-for="Telefon" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Ulica" class="control-label"></label>
+            <div class="mb-3">
+                <label asp-for="Ulica" class="form-label"></label>
                 <input asp-for="Ulica" class="form-control" />
                 <span asp-validation-for="Ulica" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Mesto" class="control-label"></label>
+            <div class="mb-3">
+                <label asp-for="Mesto" class="form-label"></label>
                 <input asp-for="Mesto" class="form-control" />
                 <span asp-validation-for="Mesto" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="PSC" class="control-label"></label>
+            <div class="mb-3">
+                <label asp-for="PSC" class="form-label"></label>
                 <input asp-for="PSC" class="form-control" />
                 <span asp-validation-for="PSC" class="text-danger"></span>
             </div>
 
-            <!-- poistenia budú kde???
-            <div class="form-group">
-                <label asp-for="Poistenia" class="control-label"></label>
-                <input asp-for="Poistenia" class="form-control" />
-                <span asp-validation-for="Poistenia" class="text-danger"></span>
-            </div>
-            -->
-            
-            <div class="form-group">
-                <input type="submit" value="Vytvoriť" class="btn btn-primary" />
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="submit" class="btn btn-primary">Vytvoriť</button>
+
+                <a asp-action="Index" class="btn btn-secondary">Späť na zoznam</a>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Späť na zoznam</a>
-</div>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

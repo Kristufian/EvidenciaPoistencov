@@ -1,0 +1,20 @@
+﻿@model EvidenciaPoistencov.Models.Poistenie
+
+@{
+    ViewData["Title"] = "Detail poistenia";
+}
+
+<h1>Detail poistenia</h1>
+
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title mb-3">@Model.Nazov</h4>
+
+        <p><strong>Predmet poistenia: </strong>@(Model.PredmetPoistenia ?? "—")</p>
+        <p><strong>Poistná suma: </strong>@(Model.Suma == decimal.Truncate(Model.Suma) ? $"{Model.Suma:N0} €" : $"{Model.Suma:N2} €")</p>
+        <p><strong>Platnosť od: </strong>@Model.PlatnostOd.ToShortDateString()</p>
+        <p class="mb-0"><strong>Platnosť do: </strong>@(Model.PlatnostDo?.ToShortDateString() ?? "—")</p>
+    </div>
+</div>
+
+<a asp-action="Index"class="btn btn-secondary mt-3">Späť na moje údaje</a>

@@ -28,7 +28,7 @@ namespace EvidenciaPoistencov.Controllers
                 return Forbid();
             }
 
-            var poistenec = await _context.Poistenci.Include(p => p.Poistenia).FirstOrDefaultAsync(p => p.Id == user.PoistenecId);
+            var poistenec = await _context.Poistenci.AsNoTracking().Include(p => p.Poistenia).FirstOrDefaultAsync(p => p.Id == user.PoistenecId);
 
             if (poistenec == null)
             {
@@ -36,6 +36,25 @@ namespace EvidenciaPoistencov.Controllers
             }
 
             return View(poistenec);
+        }
+
+        public async Task<IActionResult> DetailPoistenia(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null || user.PoistenecId == null)
+            {
+                return Forbid();
+            }
+
+            var poistenie = await _context.Poistenia.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id && p.PoistenecId == user.PoistenecId);
+
+            if (poistenie == null)
+            {
+                return NotFound();
+            }
+
+            return View(poistenie);
         }
     }
 }

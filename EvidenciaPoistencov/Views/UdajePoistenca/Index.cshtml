@@ -8,45 +8,51 @@
 
 <div class="card mb-4">
     <div class="card-body">
-        <h4>@Model.Meno @Model.Priezvisko</h4>
+        <h4 class="card-title mb-3">@Model.Meno @Model.Priezvisko</h4>
 
-        <p><strong>Email:</strong> @Model.Email</p>
-        <p><strong>Telefón:</strong> @Model.Telefon</p>
-        <p><strong>Ulica:</strong> @Model.Ulica</p>
-        <p><strong>Mesto:</strong> @Model.Mesto</p>
-        <p><strong>PSČ:</strong> @Model.PSC</p>
+        <p><strong>Email: </strong>@Model.Email</p>
+        <p><strong>Telefón: </strong>@(Model.Telefon ?? "—")</p>
+        <p><strong>Ulica: </strong>@(Model.Ulica ?? "—")</p>
+        <p><strong>Mesto: </strong>@(Model.Mesto ?? "—")</p>
+        <p class="mb-0"><strong>PSČ: </strong>@(Model.PSC ?? "—")</p>
     </div>
 </div>
 
 <h2>Moje poistenia</h2>
 
-@if (Model.Poistenia != null && Model.Poistenia.Any())
+@if (Model.Poistenia.Any())
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Názov</th>
-                <th>Predmet poistenia</th>
-                <th>Poistná suma</th>
-                <th>Platnosť od</th>
-                <th>Platnosť do</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var poistenie in Model.Poistenia)
-            {
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
                 <tr>
-                    <td>@poistenie.Nazov</td>
-                    <td>@poistenie.PredmetPoistenia</td>
-                    <td>@poistenie.Suma €</td>
-                    <td>@poistenie.PlatnostOd.ToShortDateString()</td>
-                    <td>@poistenie.PlatnostDo.ToShortDateString()</td>
+                    <th>Názov</th>
+                    <th>Predmet poistenia</th>
+                    <th>Poistná suma</th>
+                    <th>Platnosť od</th>
+                    <th>Platnosť do</th>
+                    <th>Akcie</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+
+            <tbody>
+                @foreach (var poistenie in Model.Poistenia)
+                {
+                    <tr>
+                        <td>@poistenie.Nazov</td>
+                        <td>@(poistenie.PredmetPoistenia ?? "—")</td>
+                        <td>@(poistenie.Suma == decimal.Truncate(poistenie.Suma) ? $"{poistenie.Suma:N0} €" : $"{poistenie.Suma:N2} €")</td>
+                        <td>@poistenie.PlatnostOd.ToShortDateString()</td>
+                        <td>@(poistenie.PlatnostDo?.ToShortDateString() ?? "—")</td>
+
+                        <td><a asp-action="DetailPoistenia" asp-route-id="@poistenie.Id" class="btn btn-sm btn-info">Detail</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 else
 {
-    <p>Zatiaľ nemáte žiadne poistenia.</p>
+    <p class="text-muted">Zatiaľ nemáte žiadne poistenia.</p>
 }
